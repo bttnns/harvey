@@ -1,0 +1,8 @@
+/harv
+.harvey.yaml
+.DS_Store
+
+# Local-only: vision/idea-phase docs and the in-progress marketing site.
+# Kept on disk, never published.
+/docs/vision/
+/mockups/

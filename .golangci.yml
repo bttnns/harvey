@@ -1,0 +1,15 @@
+version: "2"
+
+run:
+  timeout: 5m
+
+# Keep the default "standard" set (errcheck, govet, ineffassign, staticcheck,
+# unused) and add a typo checker. Formatting is handled by the formatters below.
+linters:
+  enable:
+    - misspell
+
+formatters:
+  enable:
+    - gofmt
+    - goimports

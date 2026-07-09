@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: vet, build, test, lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+        with:
+          go-version: stable
+      - run: go vet ./...
+      - run: go build ./...
+      - run: go test ./...
+      - uses: golangci/golangci-lint-action@v9
+        with:
+          version: v2.12.2
+
+  e2e:
+    name: end-to-end (docker)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+        with:
+          go-version: stable
+      # Docker is preinstalled on ubuntu-latest; the script builds harv, runs the
+      # full command matrix against it, and cleans up on exit (even on failure).
+      - run: ./scripts/test.sh docker

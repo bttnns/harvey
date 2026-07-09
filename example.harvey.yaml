@@ -1,0 +1,46 @@
+# Copy to .harvey.yaml in a project (or ~/.config/harvey/config.yaml for a global
+# default) and edit. Every field is optional; the project file overlays the user
+# file, and anything unset falls back to a built-in default.
+
+image: dotfiles-dev          # the image harv runs and builds (omit to use the
+                             # default Red Hat UBI9 base; a registry image is
+                             # pulled on first run, no Containerfile needed)
+runtime: auto                # auto | container | podman | docker
+shell: /usr/bin/zsh          # run as a login shell: `-l`, or `-lc "<cmd>"`
+# platform: linux/amd64      # os/arch for run + build (cross-arch emulation)
+# workdir: /work             # working dir inside the container (default: $PWD)
+# user: "1000:1000"          # -u name|uid[:gid]
+# network: host              # --network mode
+
+mounts:
+  - $HOME:$HOME              # bind-mount $HOME at the same path so projects/caches persist
+
+env:
+  - HOME=$HOME
+  - DOTCTR=1                 # example: a flag your shell rc checks for inside the container
+# envFile:
+#   - .env                   # --env-file (repeatable)
+
+# runArgs:                   # raw flags appended verbatim to `run` (escape hatch)
+#   - --cap-add=SYS_PTRACE
+
+# postBuild:                 # commands run (throwaway, $HOME-mounted) after a build
+#   - npm ci
+
+build:                       # only needed for `harv init` / `harv recreate`
+  containerfile: $HOME/.config/dotfiles/Containerfile
+  context: $HOME/.config/dotfiles
+#  args:                     # --build-arg KEY=VALUE
+#    - GO_VERSION=1.25
+#  target: dev               # --target build stage
+
+# sandbox: settings for `harv sandbox <cmd>` (locked-down profile for AI agents /
+# untrusted code). Inverts the default: only the workspace is mounted, no $HOME, no
+# network, read-only rootfs, dropped capabilities. Uses the same image as above.
+# sandbox:
+#   workspace: $PWD          # the only rw mount (default)
+#   network: none            # block egress (default)
+#   env:
+#     - ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY   # inject only what the agent needs
+#   memory: 4g
+#   cpus: 2

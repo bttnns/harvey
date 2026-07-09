@@ -81,6 +81,11 @@ for the threat model, per-runtime support, and per-agent recipes.
 - **[Sandboxing AI agents](docs/sandbox.md)** - threat model, per-runtime support, recipes.
 - **[Spec](docs/spec.md)** - architecture, full config schema, command and driver reference.
 - **[Status](docs/status.md)** - what works today and what's next.
+
+## License
+
+[AGPL-3.0](LICENSE).
+
 ## In memory
 
 Named for Harvey, my first dog, a beagle, and the best protector and friend I could

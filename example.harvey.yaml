@@ -5,15 +5,19 @@
 image: dotfiles-dev          # the image harv runs and builds (omit to use the
                              # default Red Hat UBI9 base; a registry image is
                              # pulled on first run, no Containerfile needed)
-runtime: auto                # auto | container | podman | docker
+runtime: auto                # auto | container (macOS) | podman (Linux)
 shell: /usr/bin/zsh          # run as a login shell: `-l`, or `-lc "<cmd>"`
 # platform: linux/amd64      # os/arch for run + build (cross-arch emulation)
 # workdir: /work             # working dir inside the container (default: $PWD)
 # user: "1000:1000"          # -u name|uid[:gid]
 # network: host              # --network mode
 
-mounts:
-  - $HOME:$HOME              # bind-mount $HOME at the same path so projects/caches persist
+# $HOME is bind-mounted at the same path by default in dev mode, so projects,
+# dotfiles, and caches persist across throwaway runs. No config needed. Opt out with:
+# home: false                # do not mount $HOME (sandbox mode never mounts it either)
+
+# mounts:                    # extra bind mounts, added alongside the default $HOME mount
+#   - /data:/data            # (listing $HOME:$HOME here is fine; it is not duplicated)
 
 env:
   - HOME=$HOME
@@ -36,8 +40,10 @@ build:                       # only needed for `harv init` / `harv recreate`
 
 # sandbox: settings for `harv sandbox <cmd>` (locked-down profile for AI agents /
 # untrusted code). Inverts the default: only the workspace is mounted, no $HOME, no
-# network, read-only rootfs, dropped capabilities. Uses the same image as above.
+# network, read-only rootfs, dropped capabilities. Uses the same image as above
+# unless sandbox.image is set.
 # sandbox:
+#   image: dotfiles-sandbox  # optional leaner/locked-down image (default: the image above)
 #   workspace: $PWD          # the only rw mount (default)
 #   network: none            # block egress (default)
 #   env:

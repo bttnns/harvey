@@ -28,6 +28,7 @@ type Build struct {
 // inverts the dev default: only the workspace is mounted (never $HOME), and a
 // dedicated env is injected rather than the project's.
 type Sandbox struct {
+	Image     string   `yaml:"image"`     // sandbox image; falls back to the top-level image:
 	Workspace string   `yaml:"workspace"` // the only rw mount (default: $PWD)
 	Network   string   `yaml:"network"`   // none (default) | a network name
 	Env       []string `yaml:"env"`       // KEY=VALUE injected into the sandbox
@@ -40,12 +41,13 @@ type Sandbox struct {
 // earlier ones, and anything left unset falls back to a built-in default.
 type Config struct {
 	Image     string   `yaml:"image"`
-	Runtime   string   `yaml:"runtime"` // auto | container | podman | docker
+	Runtime   string   `yaml:"runtime"` // auto | container | podman
 	Shell     string   `yaml:"shell"`
 	Platform  string   `yaml:"platform"` // os/arch for run + build
 	Workdir   string   `yaml:"workdir"`  // overrides the default -w $PWD
 	User      string   `yaml:"user"`     // -u name|uid[:gid]
 	Network   string   `yaml:"network"`  // --network
+	Home      *bool    `yaml:"home"`     // mount $HOME:$HOME in dev mode (default true; home: false opts out)
 	Mounts    []string `yaml:"mounts"`
 	Env       []string `yaml:"env"`
 	EnvFile   []string `yaml:"envFile"`   // --env-file (repeatable)
@@ -53,6 +55,27 @@ type Config struct {
 	PostBuild []string `yaml:"postBuild"` // commands run after a build
 	Build     Build    `yaml:"build"`
 	Sandbox   Sandbox  `yaml:"sandbox"`
+}
+
+// HomeMount reports whether dev mode should bind-mount $HOME at the same path.
+// It defaults to true so `harv` runs against your real files with zero config, and
+// is opted out with `home: false`. The field is a *bool, not a bool, so the overlay
+// can tell "unset" (inherit the layer below) apart from an explicit false: a plain
+// bool's zero value would look like a deliberate `home: false` and clobber a true set
+// in a lower layer.
+func (c *Config) HomeMount() bool {
+	return c.Home == nil || *c.Home
+}
+
+// SandboxImage is the image a `harv sandbox` run uses: the dedicated `sandbox.image`
+// if set (typically a leaner, locked-down image), otherwise the top-level `image:`.
+// The HARVEY_IMAGE env / --image flag override only the top-level image, so they reach
+// a sandbox run only through this fallback, never over an explicit `sandbox.image`.
+func (c *Config) SandboxImage() string {
+	if c.Sandbox.Image != "" {
+		return c.Sandbox.Image
+	}
+	return c.Image
 }
 
 // Load reads config and applies HARVEY_IMAGE / HARVEY_RUNTIME overrides. If explicit
@@ -77,8 +100,11 @@ func Load(explicit string) (*Config, error) {
 	for _, p := range paths {
 		f, err := os.Open(p)
 		if err != nil {
-			if os.IsNotExist(err) && explicit == "" {
-				continue
+			if os.IsNotExist(err) {
+				if explicit == "" {
+					continue
+				}
+				return nil, fmt.Errorf("config %q not found; check the --config path or run \"harv scaffold\" to create one", p)
 			}
 			return nil, err
 		}
@@ -138,6 +164,7 @@ func (c *Config) Expand() {
 	for i := range c.EnvFile {
 		c.EnvFile[i] = expand(c.EnvFile[i])
 	}
+	c.Sandbox.Image = expand(c.Sandbox.Image)
 	c.Sandbox.Workspace = expand(c.Sandbox.Workspace)
 	for i := range c.Sandbox.Env {
 		c.Sandbox.Env[i] = expand(c.Sandbox.Env[i])

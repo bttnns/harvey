@@ -15,9 +15,10 @@ var (
 )
 
 var initCmd = &cobra.Command{
-	Use:   "init",
-	Short: "Build the image if it is not present",
-	Args:  cobra.NoArgs,
+	Use:        "init",
+	SuggestFor: []string{"build", "create"},
+	Short:      "Build the image if it is not present",
+	Args:       cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg, rt, err := resolveBuildable()
 		if err != nil {
@@ -32,9 +33,10 @@ var initCmd = &cobra.Command{
 }
 
 var recreateCmd = &cobra.Command{
-	Use:   "recreate",
-	Short: "Force a full image rebuild",
-	Args:  cobra.NoArgs,
+	Use:        "recreate",
+	SuggestFor: []string{"build", "rebuild"},
+	Short:      "Force a full image rebuild",
+	Args:       cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg, rt, err := resolveBuildable()
 		if err != nil {

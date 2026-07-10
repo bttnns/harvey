@@ -13,8 +13,7 @@ git clone https://github.com/bttnns/harvey.git ~/Dev/harvey
 cd ~/Dev/harvey && go build -o ~/.local/bin/harv .
 ```
 
-(Or `go install github.com/bttnns/harvey@latest` if you have Go set up.) Then check
-it with `harv version` and `harv doctor`.
+Then check it with `harv version` and `harv doctor`.
 
 ## Configure once
 

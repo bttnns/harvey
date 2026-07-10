@@ -1,5 +1,5 @@
-// harvey (harv) is a small wrapper over a container runtime (Apple `container`,
-// Podman, or Docker) for throwaway, $HOME-mounted dev environments. The toolchain
+// harvey (harv) is a small wrapper over a container runtime (Apple `container` on
+// macOS, Podman on Linux) for throwaway, $HOME-mounted dev environments. The toolchain
 // lives in a container image; harv runs commands inside it against your real files,
 // then throws the container away (--rm) while caches under ~/.cache persist.
 //

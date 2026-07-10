@@ -10,10 +10,11 @@ your machine.
 
 - **Keep your machine clean** - toolchains live in one image, not on your host.
 - **No Dockerfile to write** - point it at any image and run.
-- **Throwaway, but your work stays** - every run is `--rm` with your `$HOME` mounted, so
-  files, dotfiles, and build caches persist.
-- **One config, every runtime** - the same `.harvey.yaml` works on Apple `container`,
-  Podman, and Docker.
+- **Throwaway, but your work stays** - every dev run is `--rm` with your `$HOME`
+  mounted at the same path by default, so files, dotfiles, and build caches persist.
+  Opt out with `home: false`; `harv sandbox` never mounts `$HOME`.
+- **One config, every runtime** - the same `.harvey.yaml` runs natively on Apple
+  `container` (macOS) and Podman (Linux).
 - **Sandbox AI agents** - `harv sandbox` runs an agent with no `$HOME` and no network.
 
 ```sh
@@ -27,19 +28,19 @@ harv sandbox claude        # run an AI agent boxed in: no $HOME, no network
 No existing tool covers this exact combination: Dev Containers are workspace-centric
 and have no Apple `container` support; Distrobox/Toolbx are Linux-host only with
 persistent boxes; Apple's `container machine` is macOS-only and persistent. `harv` is
-the thin layer that unifies throwaway, `$HOME`-mounted, config-driven runs across all
-three runtimes. It is a small wrapper over `<runtime> run` built with
+the thin layer that unifies throwaway, `$HOME`-mounted, config-driven runs across both
+runtimes. It is a small wrapper over `<runtime> run` built with
 [cobra](https://github.com/spf13/cobra): config in `internal/config`, runtimes in
 `internal/runtime`, commands in `cmd/`. No daemon, no persistent-container lifecycle.
 
 ## Install
 
-```sh
-go install github.com/bttnns/harvey@latest   # installs the `harvey` binary
-alias harv=harvey                              # optional shorthand used below
-```
+Build the `harv` binary from a clone onto your PATH:
 
-Or build from a clone: `go build -o harv .`
+```sh
+git clone https://github.com/bttnns/harvey.git ~/Dev/harvey
+cd ~/Dev/harvey && go build -o ~/.local/bin/harv .
+```
 
 > `harv` calls your container runtime on the host, so build it for the host OS. If you
 > compile inside a Linux container, cross-compile for the host, e.g.
@@ -52,6 +53,7 @@ harv                       # interactive login shell in a throwaway container
 harv go test ./...         # run one command in a throwaway container
 harv 'npm ci && npm test'  # quote to chain shell commands
 harv serve --name app -p 3000 npm run dev -- -H 0.0.0.0 -p 3000   # browser-facing server
+harv enter                 # persistent "pet" container for this dir, reused across runs
 harv doctor                # check runtime, image, config, and platform
 ```
 

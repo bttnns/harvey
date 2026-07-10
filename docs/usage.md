@@ -12,8 +12,6 @@ to `~/.config/harvey/config.yaml` for a global default) and edit:
 ```yaml
 image: dotfiles-dev
 shell: /usr/bin/zsh
-mounts:
-  - $HOME:$HOME
 env:
   - HOME=$HOME
 build:
@@ -21,7 +19,10 @@ build:
   context: $HOME/.config/dotfiles
 ```
 
-`image:` is the only required key (it defaults to Red Hat UBI9 if unset). The project
+`image:` is the only required key (it defaults to Red Hat UBI9 if unset). In dev mode
+`$HOME` is bind-mounted at the same path by default, so no `mounts:` entry is needed for
+your projects and caches to persist; set `home: false` to opt out. (`harv sandbox` never
+mounts `$HOME`, whatever this is set to.) The project
 file overlays the user-level `~/.config/harvey/config.yaml`, and `~` and `$VAR` are
 expanded in every path. See [spec.md](spec.md) for all keys, defaults, and the full
 precedence order. `harv scaffold` writes a starter `.harvey.yaml` for you.
@@ -69,6 +70,30 @@ Two gotchas for `harv serve`:
 - **Use `npm run <script>` / `npx`, not the bare binary**, so `node_modules/.bin` is on
   `PATH`.
 
+## Persistent dev container (harv enter)
+
+Every command above is `--rm`: the container vanishes when it exits. Sometimes you want
+the opposite, a container that sticks around so a slow, one-off setup (a downloaded
+model, a warmed build cache, a half-finished experiment) survives between throwaway runs
+and, crucially, between image rebuilds. That is `harv enter`:
+
+```sh
+harv enter                 # enter the container named for this dir (harvey-<dir>)
+harv enter mybox           # enter (or create) a container named exactly "mybox"
+harv enter mybox go test ./...   # run a command in it instead of opening a shell
+```
+
+With no NAME the container is named after the current directory (sanitized, prefixed
+`harvey-`, so `~/Dev/foo` becomes `harvey-foo`). The first `enter` starts it detached
+with your normal dev profile (`$HOME` mounted, same as a bare `harv`) and drops you into
+a login shell; later `enter`s re-enter the same container, restarting it if it had
+stopped. It appears in `harv ls` and is torn down with `harv rm NAME`.
+
+Treat it as a **cache, not a home.** It is a scratch space that outlives `harv recreate`,
+not a place to keep anything you cannot lose: reproducible state belongs in your
+`Containerfile`, and `harv rm NAME` throws the container away guilt-free. If it drifts or
+breaks, delete it and `enter` again.
+
 ## Setup and diagnostics
 
 ```sh
@@ -84,7 +109,7 @@ autonomous AI agent to be boxed in. harvey runs in exactly those two profiles:
 
 | | `harv` / `harv <cmd>` (dev) | `harv sandbox <cmd>` (locked down) |
 |---|---|---|
-| Mounts | full `$HOME`: projects, dotfiles, caches | only the workspace (`$PWD`) |
+| Mounts | full `$HOME` by default (`home: false` opts out): projects, dotfiles, caches | only the workspace (`$PWD`) |
 | Network | on | off (`--network none`) |
 | Root filesystem | writable | read-only + tmpfs `/tmp` |
 | Capabilities | default | dropped (`--cap-drop ALL`) |

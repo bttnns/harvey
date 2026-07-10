@@ -11,7 +11,7 @@ var scaffoldForce bool
 
 const scaffoldTemplate = `# harvey config. Full reference: docs/spec.md.
 image: my-dev-image
-runtime: auto            # auto | container | podman | docker
+runtime: auto            # auto | container (macOS) | podman (Linux)
 shell: /bin/sh
 # platform: linux/amd64  # os/arch for cross-arch emulation
 mounts:

@@ -24,14 +24,47 @@ jobs:
         with:
           version: v2.12.2
 
-  e2e:
-    name: end-to-end (docker)
+  e2e-podman:
+    name: e2e (podman, linux)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-go@v6
         with:
           go-version: stable
-      # Docker is preinstalled on ubuntu-latest; the script builds harv, runs the
-      # full command matrix against it, and cleans up on exit (even on failure).
-      - run: ./scripts/test.sh docker
+      - name: Ensure podman is installed
+        run: |
+          if ! command -v podman >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y podman
+          fi
+          podman --version
+      - name: End-to-end suite (podman)
+        run: ./scripts/test.sh podman
+
+  e2e-apple-container:
+    name: e2e (apple container, macos)
+    runs-on: macos-26
+    # EXPERIMENTAL: allowed to fail. GitHub's hosted macOS runners may lack the nested
+    # virtualization Apple `container` needs, so this job is not yet a gate. The
+    # authoritative Apple-container check is scripts/e2e-all.sh run on a real Mac; once
+    # this proves reliable on a hosted runner, drop continue-on-error.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v6
+        with:
+          go-version: stable
+      - name: Install Apple container
+        run: |
+          set -euo pipefail
+          url="$(curl -fsSL https://api.github.com/repos/apple/container/releases/latest \
+            | grep -o 'https://[^"]*\.pkg' | head -n1)"
+          echo "Downloading $url"
+          curl -fL -o container.pkg "$url"
+          sudo installer -pkg container.pkg -target /
+          container --version
+      - name: Start the container service
+        run: container system start
+      - name: End-to-end suite (container)
+        run: ./scripts/test.sh container

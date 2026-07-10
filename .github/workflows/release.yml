@@ -1,0 +1,58 @@
+name: Release
+
+# Push to the `release` branch: lint, test, then cross-compile `harv` for macOS and
+# Linux on intel and arm, and upload the four binaries as workflow artifacts. Pure Go
+# cross-compilation, so no container runtime is needed. Tagged releases, Homebrew, and
+# goreleaser are deliberately deferred; this branch is the "build me real binaries" gate.
+on:
+  push:
+    branches: [release]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: vet, test, lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v6
+        with:
+          go-version: stable
+      - run: go vet ./...
+      - run: go test ./...
+      - uses: golangci/golangci-lint-action@v9
+        with:
+          version: v2.12.2
+
+  build:
+    name: build ${{ matrix.goos }}/${{ matrix.goarch }}
+    needs: check
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        goos: [darwin, linux]
+        goarch: [amd64, arm64]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # full history so git describe can version the binary
+      - uses: actions/setup-go@v6
+        with:
+          go-version: stable
+      - name: Build harv
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: "0"
+        run: |
+          version="$(git describe --tags --always --dirty)"
+          go build -trimpath \
+            -ldflags "-s -w -X github.com/bttnns/harvey/cmd.Version=$version" \
+            -o "harv-${GOOS}-${GOARCH}" .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: harv-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: harv-${{ matrix.goos }}-${{ matrix.goarch }}
+          if-no-files-found: error

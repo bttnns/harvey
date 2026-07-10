@@ -42,34 +42,7 @@ jobs:
       - name: End-to-end suite (podman)
         run: ./scripts/test.sh podman
 
-  e2e-apple-container:
-    name: e2e (apple container, macos)
-    runs-on: macos-26
-    # EXPERIMENTAL: allowed to fail. GitHub's hosted macOS runners may lack the nested
-    # virtualization Apple `container` needs, so this job is not yet a gate. The
-    # authoritative Apple-container check is scripts/e2e-all.sh run on a real Mac; once
-    # this proves reliable on a hosted runner, drop continue-on-error.
-    continue-on-error: true
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-go@v6
-        with:
-          go-version: stable
-      - name: Install Apple container
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -euo pipefail
-          # Authenticated API call: anonymous requests from shared runners hit the
-          # rate limit (403).
-          url="$(curl -fsSL -H "Authorization: Bearer $GH_TOKEN" \
-            https://api.github.com/repos/apple/container/releases/latest \
-            | grep -o 'https://[^"]*\.pkg' | head -n1)"
-          echo "Downloading $url"
-          curl -fL -o container.pkg "$url"
-          sudo installer -pkg container.pkg -target /
-          container --version
-      - name: Start the container service
-        run: container system start
-      - name: End-to-end suite (container)
-        run: ./scripts/test.sh container
+# Apple `container` cannot run on hosted runners: `container system start` prompts
+# interactively on first start, and the runners lack the nested virtualization that
+# Virtualization.framework VMs need (verified 2026-07-09; an experimental job died on
+# both). The authoritative Apple-container check is `scripts/e2e-all.sh` on a real Mac.

@@ -56,9 +56,14 @@ jobs:
         with:
           go-version: stable
       - name: Install Apple container
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          url="$(curl -fsSL https://api.github.com/repos/apple/container/releases/latest \
+          # Authenticated API call: anonymous requests from shared runners hit the
+          # rate limit (403).
+          url="$(curl -fsSL -H "Authorization: Bearer $GH_TOKEN" \
+            https://api.github.com/repos/apple/container/releases/latest \
             | grep -o 'https://[^"]*\.pkg' | head -n1)"
           echo "Downloading $url"
           curl -fL -o container.pkg "$url"

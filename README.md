@@ -35,16 +35,28 @@ runtimes. It is a small wrapper over `<runtime> run` built with
 
 ## Install
 
-Build the `harv` binary from a clone onto your PATH:
+**Pre-built binary** (static, no toolchain needed): grab yours from the
+[latest release](https://github.com/bttnns/harvey/releases/latest) and put it on PATH.
+
+```sh
+# macOS (Apple silicon)
+curl -fL -o ~/.local/bin/harv \
+  https://github.com/bttnns/harvey/releases/latest/download/harv-darwin-arm64
+chmod +x ~/.local/bin/harv
+
+# Linux: use harv-linux-amd64 or harv-linux-arm64 instead
+```
+
+**From source** (needs Go):
 
 ```sh
 git clone https://github.com/bttnns/harvey.git ~/Dev/harvey
-cd ~/Dev/harvey && go build -o ~/.local/bin/harv .
+cd ~/Dev/harvey && make install    # builds ~/.local/bin/harv, version-stamped
 ```
 
 > `harv` calls your container runtime on the host, so build it for the host OS. If you
 > compile inside a Linux container, cross-compile for the host, e.g.
-> `GOOS=darwin GOARCH=arm64 go build -o harv .`.
+> `harv 'make install GOOS=darwin GOARCH=arm64'`.
 
 ## Quickstart
 

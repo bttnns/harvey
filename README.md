@@ -63,8 +63,8 @@ only required key. See the [usage guide](docs/usage.md) for the full command set
 
 ## Sandbox an agent
 
-`harv sandbox` inverts the permissive dev default: the agent gets the **same image**
-(so it keeps the toolchain) but **none of your host**: only the project is mounted, the
+`harv sandbox` inverts the permissive dev default: the agent gets the same image (or a
+dedicated `sandbox.image`) but **none of your host**: only the project is mounted, the
 network is off, the root filesystem is read-only, and capabilities are dropped. So it
 can't read your SSH keys or cloud creds, write outside the project, or phone home.
 
@@ -73,9 +73,11 @@ harv sandbox claude        # run an AI coding agent, contained
 harv sandbox 'npm test'    # run untrusted scripts, contained
 ```
 
-Because the container is the boundary, you can safely run an agent in its most
-autonomous mode and inject only the key it needs. See [docs/sandbox.md](docs/sandbox.md)
-for the threat model, per-runtime support, and per-agent recipes.
+Because the container is the boundary, you can run an agent in its most autonomous
+mode and inject only the key it needs. One honest tradeoff: the full seal also blocks
+the agent's own model API, so cloud-backed agents need `sandbox.network` opened while
+every other lockdown stays. See [docs/sandbox.md](docs/sandbox.md) for the threat
+model, per-runtime support, and per-agent recipes.
 
 ## Documentation
 

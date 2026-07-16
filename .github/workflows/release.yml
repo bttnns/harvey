@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-go@v6
+      - uses: actions/setup-go@v7
         with:
           go-version: stable
       - run: go vet ./...
@@ -38,7 +38,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0 # full history so git describe can version the binary
-      - uses: actions/setup-go@v6
+      - uses: actions/setup-go@v7
         with:
           go-version: stable
       - name: Build harv

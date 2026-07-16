@@ -51,7 +51,7 @@ jobs:
           go build -trimpath \
             -ldflags "-s -w -X github.com/bttnns/harvey/cmd.Version=$version" \
             -o "harv-${GOOS}-${GOARCH}" .
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: harv-${{ matrix.goos }}-${{ matrix.goarch }}
           path: harv-${{ matrix.goos }}-${{ matrix.goarch }}
